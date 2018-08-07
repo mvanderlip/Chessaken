@@ -53,16 +53,6 @@ public class Board : MonoBehaviour {
     [SerializeField]
     List<Piece> pieces = new List<Piece>(); // List of all pieces in the game (32)
 
-    public void setSquares(List<Square> p_squares)
-    {
-        squares = p_squares;
-        addSquareCoordinates();
-    }
-    public List<Square> getSquares()
-    {
-        return squares;
-    }
-
     void Start() {
         setUpMode();
         setBoardTheme();

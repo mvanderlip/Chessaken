@@ -20,6 +20,11 @@ public class Chess960 {
         return startStates[piece_name][team];
     }
 
+    public string[] GetPieceNames()
+    {
+        return piece_names;
+    }
+
     public Chess960()
     {
         startStates = new Dictionary<string, Dictionary<int, List<Square>>>();

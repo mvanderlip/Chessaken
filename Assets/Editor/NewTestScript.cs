@@ -7,38 +7,95 @@ using System.Collections.Generic;
 public class NewTestScript {
 
     [Test]
-    public void NewTestScriptSimplePasses() {
-        // Use the Assert class to test conditions.
-    }
-
-    [Test]
     public void TestGenerate()
     {
         Chess960 chess = new Chess960();
-        GameObject boardGo = new GameObject();
-        Board board = boardGo.AddComponent<Board>();
-        List<Square> squares = new List<Square>();
-        for (int k = 0; k < 64; k++)
+        List<Square> squares = getBoard();
+        chess.GenerateSetUp(squares);
+        foreach(var item in chess.GetPieceNames())
         {
-            GameObject square = new GameObject();
-            square.AddComponent<Square>();
-            square.AddComponent<MeshRenderer>();
-            squares.Add(square.GetComponent<Square>());
+            Assert.IsNotEmpty(chess.getStartForPiece(item, 1));
+            Assert.IsNotEmpty(chess.getStartForPiece(item, -1));
         }
-        board.setSquares(squares);
+    }
+
+    [Test]
+    public void TestBishopsOnOppositeSquares()
+    {
+        Chess960 chess = new Chess960();
+        List<Square> squares = getBoard();
+        Piece piece = new Piece();
+        piece.piece_name = "Bishop";
+        piece.team = 1;
+        chess.GenerateSetUp(squares);
+        Assert.AreNotEqual(chess.GetStartPosition(piece).team, chess.GetStartPosition(piece).team);
+    }
+
+    [Test]
+    public void TestDuplicatePieceReturnsDifferentSquares()
+    {
+        Chess960 chess = new Chess960();
+        List<Square> squares = getBoard();
         Piece piece = new Piece();
         piece.piece_name = "Tower";
         piece.team = 1;
-        chess.GenerateSetUp(board.getSquares());
-        Assert.IsNotEmpty(chess.getStartForPiece(piece.piece_name, 1));
+        chess.GenerateSetUp(squares);
+        Assert.AreNotEqual(chess.GetStartPosition(piece), chess.GetStartPosition(piece));
     }
 
-    // A UnityTest behaves like a coroutine in PlayMode
-    // and allows you to yield null to skip a frame in EditMode
-    [UnityTest]
-    public IEnumerator NewTestScriptWithEnumeratorPasses() {
-        // Use the Assert class to test conditions.
-        // yield to skip a frame
-        yield return null;
+    [Test]
+    public void TestKingBetweenBishops()
+    {
+        Chess960 chess = new Chess960();
+        List<Square> squares = getBoard();
+        Piece piece = new Piece();
+        piece.piece_name = "Tower";
+        piece.team = 1;
+        Piece kingpiece = new Piece();
+        kingpiece.piece_name = "King";
+        kingpiece.team = 1;
+        chess.GenerateSetUp(squares);
+        int fTower = chess.GetStartPosition(piece).coor.x;
+        int sTower = chess.GetStartPosition(piece).coor.x;
+        int king = chess.GetStartPosition(kingpiece).coor.x;
+        Assert.IsTrue((king < fTower && king > sTower) || (king > fTower && king < sTower));
+    }
+
+    [Test]
+    public void TestRemoveOnGet()
+    {
+        Chess960 chess = new Chess960();
+        List<Square> squares = getBoard();
+        Piece piece = new Piece();
+        piece.piece_name = "Tower";
+        piece.team = 1;
+        chess.GenerateSetUp(squares);
+        Assert.IsFalse(chess.getStartForPiece("Tower", 1).Contains(chess.GetStartPosition(piece)));
+    }
+
+    private List<Square> getBoard()
+    {
+        List<Square> squares = new List<Square>();
+        int coor_x = 0;
+        int coor_y = 0;
+        for (int k = 0; k < 64; k++)
+        {
+            GameObject square = new GameObject();
+            square.AddComponent<MeshRenderer>();
+            squares.Add(square.AddComponent<Square>());
+            square.GetComponent<Square>().team = coor_x % 2 == 0 ? 1 : -1;
+            square.GetComponent<Square>().coor = squares[k].coor = new Coordinate(coor_x, coor_y);
+            squares[k].coor.pos = new Vector3(squares[k].transform.position.x - 0.5f, squares[k].transform.position.y, squares[k].transform.position.z - 0.5f);
+            if (coor_y > 0 && coor_y % 7 == 0)
+            {
+                coor_x++;
+                coor_y = 0;
+            }
+            else
+            {
+                coor_y++;
+            }
+        }
+        return squares;
     }
 }
