@@ -365,6 +365,7 @@ public class Piece : MonoBehaviour {
     */
     public void setStartSquare(Square square) {
         cur_square = square;
+        transform.position = cur_square.coor.pos;
     } 
 
     // Function called when someone eats this piece

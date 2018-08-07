@@ -12,7 +12,10 @@ public class Board : MonoBehaviour {
     private List<Square> hovered_squares = new List<Square>(); // List squares to hover
     private Square closest_square; // Current closest square when dragging a piece
     private int cur_theme = 0;
+    private Chess960 modeChess960;
 
+
+    public Mode mode;
     public int cur_turn = -1; // -1 = whites; 1 = blacks
     public Dictionary<int, Piece> checking_pieces = new Dictionary<int, Piece>(); // Which piece is checking the king (key = team)
     
@@ -50,10 +53,32 @@ public class Board : MonoBehaviour {
     [SerializeField]
     List<Piece> pieces = new List<Piece>(); // List of all pieces in the game (32)
 
+    public void setSquares(List<Square> p_squares)
+    {
+        squares = p_squares;
+        addSquareCoordinates();
+    }
+    public List<Square> getSquares()
+    {
+        return squares;
+    }
+
     void Start() {
+        setUpMode();
         setBoardTheme();
         addSquareCoordinates(); // Add "local" coordinates to all squares
+        // Start coors are y = 7 for white and y = 0 for black;
+        if (mode == Mode.CHESS960) { modeChess960.GenerateSetUp(squares); };
         setStartPiecesCoor(); // Update all piece's coordinate
+    }
+
+    private void setUpMode()
+    {
+        mode = GlobalMode.mode;
+        if(mode == Mode.CHESS960)
+        {
+            modeChess960 = new Chess960();
+        }
     }
 
     /*
@@ -235,7 +260,8 @@ public class Board : MonoBehaviour {
     // Update each piece's coordinates getting the closest square
     private void setStartPiecesCoor() {
         for (int i = 0; i < pieces.Count ; i++) {
-            Square closest_square = getClosestSquare(pieces[i].transform.position);
+            Square closest_square = (mode == Mode.TRADITIONAL || pieces[i].piece_name.Contains("Pawn")) ? getClosestSquare(pieces[i].transform.position)
+                                                                                                        : modeChess960.GetStartPosition(pieces[i]);
             closest_square.holdPiece(pieces[i]);
             pieces[i].setStartSquare(closest_square);
             pieces[i].board = this;
@@ -250,7 +276,7 @@ public class Board : MonoBehaviour {
             try {
                 child.GetComponent<Renderer>().material = mat;
             }
-            catch (Exception e) {
+            catch (Exception) {
                 for (int j = 0; j < child.childCount; ++j) {
                     Transform child2 = child.GetChild(j);
                     child2.GetComponent<Renderer>().material = mat;
